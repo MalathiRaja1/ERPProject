@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import apiClient from '../../../api/client';
 import { recordStockMovement, fetchProducts } from '../productsSlice';
+import { useToast, extractErrorMessage } from '../../../components/ToastProvider';
 
 const MOVEMENT_TYPES = ['In', 'Out', 'Transfer', 'Adjustment'];
 
 export default function StockMovementModal({ product, onClose }) {
   const dispatch = useDispatch();
+  const toast = useToast();
   const [warehouses, setWarehouses] = useState([]);
   const [form, setForm] = useState({ warehouseId: '', type: 'In', quantity: '', reference: '' });
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     apiClient.get('/warehouses').then((res) => setWarehouses(res.data));
@@ -17,19 +18,19 @@ export default function StockMovementModal({ product, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
     try {
       await dispatch(recordStockMovement({
         productId: product.id,
         warehouseId: Number(form.warehouseId),
-        type: MOVEMENT_TYPES.indexOf(form.type), // matches the C# enum order
+        type: form.type,
         quantity: Number(form.quantity),
         reference: form.reference
       })).unwrap();
       dispatch(fetchProducts({}));
+      toast.success(`Stock updated for ${product.name}.`);
       onClose();
     } catch (err) {
-      setError(err?.response?.data || 'Failed to record movement');
+      toast.error(extractErrorMessage(err, 'Failed to record movement'));
     }
   };
 
@@ -51,8 +52,6 @@ export default function StockMovementModal({ product, onClose }) {
           onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
         <label>Reference (optional)</label>
         <input value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
-
-        {error && <p className="error-text">{JSON.stringify(error)}</p>}
 
         <div className="modal-actions">
           <button type="button" onClick={onClose}>Cancel</button>

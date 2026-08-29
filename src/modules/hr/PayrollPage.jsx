@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import apiClient from '../../api/client';
+import { useToast, extractErrorMessage } from '../../components/ToastProvider';
 
 export default function PayrollPage() {
+  const toast = useToast();
   const [runs, setRuns] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ employeeId: '', periodStart: '', periodEnd: '', additionalDeductions: 0 });
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
@@ -23,24 +24,29 @@ export default function PayrollPage() {
 
   const handleGenerate = async (e) => {
     e.preventDefault();
-    setError(null);
     try {
       await apiClient.post('/payroll/generate', {
         ...form,
         employeeId: Number(form.employeeId),
         additionalDeductions: Number(form.additionalDeductions)
       });
+      toast.success('Payroll run generated.');
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err.response?.data || 'Failed to generate payroll run');
+      toast.error(extractErrorMessage(err, 'Failed to generate payroll run'));
     }
   };
 
   const handleMarkPaid = async (id) => {
-    const res = await apiClient.post(`/payroll/${id}/mark-paid`);
-    if (res.data.warning) alert(res.data.warning);
-    load();
+    try {
+      const res = await apiClient.post(`/payroll/${id}/mark-paid`);
+      if (res.data.warning) toast.warning(res.data.warning);
+      else toast.success('Payroll marked as paid.');
+      load();
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to mark payroll as paid'));
+    }
   };
 
   return (
@@ -95,7 +101,6 @@ export default function PayrollPage() {
             <label>Additional Manual Deductions (optional)</label>
             <input type="number" step="0.01" value={form.additionalDeductions}
               onChange={(e) => setForm({ ...form, additionalDeductions: e.target.value })} />
-            {error && <p className="error-text">{typeof error === 'string' ? error : JSON.stringify(error)}</p>}
             <div className="modal-actions">
               <button type="button" onClick={() => setShowForm(false)}>Cancel</button>
               <button type="submit">Generate</button>

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts } from './productsSlice';
 import ProductForm from './components/ProductForm';
 import StockMovementModal from './components/StockMovementModal';
+import { useSortableData, sortArrow } from '../../hooks/useSortableData';
 
 export default function ProductListPage() {
   const dispatch = useDispatch();
@@ -12,9 +13,17 @@ export default function ProductListPage() {
   const [showForm, setShowForm] = useState(false);
   const [movementProduct, setMovementProduct] = useState(null);
 
+  const { sorted, sortKey, sortDir, toggleSort } = useSortableData(items, 'name');
+
   useEffect(() => {
     dispatch(fetchProducts({ search, lowStockOnly }));
   }, [dispatch, search, lowStockOnly]);
+
+  const Th = ({ label, field }) => (
+    <th className="sortable" onClick={() => toggleSort(field)}>
+      {label}{sortArrow(field, sortKey, sortDir)}
+    </th>
+  );
 
   return (
     <div>
@@ -40,12 +49,14 @@ export default function ProductListPage() {
       <table className="data-table">
         <thead>
           <tr>
-            <th>SKU</th><th>Name</th><th>Category</th><th>Supplier</th>
-            <th>Unit Price</th><th>Stock</th><th>Reorder Level</th><th></th>
+            <Th label="SKU" field="sku" /><Th label="Name" field="name" />
+            <Th label="Category" field="categoryName" /><Th label="Supplier" field="supplierName" />
+            <Th label="Unit Price" field="unitPrice" /><Th label="Stock" field="totalStock" />
+            <Th label="Reorder Level" field="reorderLevel" /><th></th>
           </tr>
         </thead>
         <tbody>
-          {items.map((p) => (
+          {sorted.map((p) => (
             <tr key={p.id} className={p.totalStock <= p.reorderLevel ? 'row-low-stock' : ''}>
               <td>{p.sku}</td>
               <td>{p.name}</td>

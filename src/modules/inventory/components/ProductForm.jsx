@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import apiClient from '../../../api/client';
 import { createProduct, fetchProducts } from '../productsSlice';
+import { useToast, extractErrorMessage } from '../../../components/ToastProvider';
 
 export default function ProductForm({ onClose }) {
   const dispatch = useDispatch();
+  const toast = useToast();
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [form, setForm] = useState({
     sku: '', name: '', description: '', categoryId: '', supplierId: '', unitPrice: '', reorderLevel: 0
   });
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     apiClient.get('/categories').then((res) => setCategories(res.data));
@@ -21,7 +22,6 @@ export default function ProductForm({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
     try {
       await dispatch(createProduct({
         ...form,
@@ -31,9 +31,10 @@ export default function ProductForm({ onClose }) {
         reorderLevel: Number(form.reorderLevel)
       })).unwrap();
       dispatch(fetchProducts({}));
+      toast.success(`Product "${form.name}" created.`);
       onClose();
     } catch (err) {
-      setError(err?.toString() || 'Failed to create product');
+      toast.error(extractErrorMessage(err, 'Failed to create product'));
     }
   };
 
@@ -61,8 +62,6 @@ export default function ProductForm({ onClose }) {
         <input name="unitPrice" type="number" step="0.01" value={form.unitPrice} onChange={handleChange} required />
         <label>Reorder Level</label>
         <input name="reorderLevel" type="number" value={form.reorderLevel} onChange={handleChange} required />
-
-        {error && <p className="error-text">{error}</p>}
 
         <div className="modal-actions">
           <button type="button" onClick={onClose}>Cancel</button>

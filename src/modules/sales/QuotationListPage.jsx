@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useState } from 'react';
 import { fetchQuotations, updateQuotationStatus, convertToOrder } from './quotationsSlice';
 import QuotationForm from './components/QuotationForm';
+import { useToast } from '../../components/ToastProvider';
 
 const STATUS_COLORS = {
   Draft: '#8a8f98', Sent: '#2d6cdf', Accepted: '#1f9254', Rejected: '#c0392b', Expired: '#a5a9b0'
@@ -10,18 +10,23 @@ const STATUS_COLORS = {
 
 export default function QuotationListPage() {
   const dispatch = useDispatch();
+  const toast = useToast();
   const { items, status } = useSelector((state) => state.quotations);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => { dispatch(fetchQuotations({})); }, [dispatch]);
 
   const handleStatusChange = (id, newStatus) => {
-    dispatch(updateQuotationStatus({ id, status: newStatus })).then(() => dispatch(fetchQuotations({})));
+    dispatch(updateQuotationStatus({ id, status: newStatus })).then((res) => {
+      if (!res.error) toast.success(`Quotation marked ${newStatus}.`);
+      dispatch(fetchQuotations({}));
+    });
   };
 
   const handleConvert = (id) => {
     dispatch(convertToOrder(id)).then((res) => {
-      if (!res.error) alert(`Converted to Sales Order ${res.payload.order.orderNumber}`);
+      if (!res.error) toast.success(`Converted to Sales Order ${res.payload.order.orderNumber}.`);
+      else toast.error('Failed to convert quotation to order.');
       dispatch(fetchQuotations({}));
     });
   };
