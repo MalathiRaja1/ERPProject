@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import apiClient from '../../api/client';
 
 function Card({ label, value, tone }) {
@@ -11,11 +12,24 @@ function Card({ label, value, tone }) {
   );
 }
 
+function ChartCard({ title, children }) {
+  return (
+    <div style={{ background: '#fff', borderRadius: 10, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+      <h3 style={{ marginTop: 0 }}>{title}</h3>
+      <div style={{ width: '100%', height: 260 }}>{children}</div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [data, setData] = useState(null);
+  const [salesTrend, setSalesTrend] = useState([]);
+  const [inventoryValuation, setInventoryValuation] = useState([]);
 
   useEffect(() => {
     apiClient.get('/dashboard').then((res) => setData(res.data));
+    apiClient.get('/reports/sales-trend', { params: { months: 6 } }).then((res) => setSalesTrend(res.data));
+    apiClient.get('/reports/inventory-valuation').then((res) => setInventoryValuation(res.data.slice(0, 8)));
   }, []);
 
   if (!data) return <p>Loading dashboard...</p>;
@@ -32,6 +46,36 @@ export default function DashboardPage() {
         <Card label="Overdue Invoices" value={data.overdueInvoiceCount} tone={data.overdueInvoiceCount > 0 ? 'bad' : 'good'} />
         <Card label="Present Today" value={`${data.presentTodayCount} / ${data.totalActiveEmployeeCount}`} tone="neutral" />
         <Card label="Cash + Bank Balance" value={`₹${data.cashAndBankBalance.toFixed(2)}`} tone={data.cashAndBankBalance >= 0 ? 'good' : 'bad'} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <ChartCard title="Sales Trend (last 6 months)">
+          {salesTrend.length === 0 ? <p style={{ color: '#666' }}>No invoiced sales yet.</p> : (
+            <ResponsiveContainer>
+              <LineChart data={salesTrend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="period" />
+                <YAxis />
+                <Tooltip formatter={(v) => `₹${v.toFixed(2)}`} />
+                <Line type="monotone" dataKey="total" stroke="#33415c" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard title="Top Inventory Value by Product">
+          {inventoryValuation.length === 0 ? <p style={{ color: '#666' }}>No products yet.</p> : (
+            <ResponsiveContainer>
+              <BarChart data={inventoryValuation}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="sku" />
+                <YAxis />
+                <Tooltip formatter={(v) => `₹${v.toFixed(2)}`} />
+                <Bar dataKey="totalValue" fill="#1f9254" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
       </div>
 
       {data.lowStockItems.length > 0 && (

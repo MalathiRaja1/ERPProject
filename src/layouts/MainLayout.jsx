@@ -23,6 +23,7 @@ export default function MainLayout() {
           <NavLink to="/hr/leave" className="nav-link">HR — Leave Requests</NavLink>
 <NavLink to="/hr/payroll" className="nav-link">HR — Payroll</NavLink>
 <NavLink to="/settings" className="nav-link">Settings</NavLink>
+<NavLink to="/reports" className="nav-link">Reports</NavLink>
         </nav>
         <div className="sidebar-footer">
           <p>{user?.fullName}</p>

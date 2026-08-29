@@ -14,6 +14,7 @@ import LeaveRequestsPage from './modules/hr/LeaveRequestsPage';
 import PayrollPage from './modules/hr/PayrollPage';
 import SettingsPage from './modules/settings/SettingsPage';
 import DashboardPage from './modules/dashboard/DashboardPage';
+import ReportsPage from './modules/reports/ReportsPage';
 
 // Placeholder for modules not yet built out — replace as each module ships
 function ComingSoon({ title }) {
@@ -44,7 +45,7 @@ export default function App() {
 <Route path="hr/leave" element={<LeaveRequestsPage />} />
 <Route path="hr/payroll" element={<PayrollPage />} />
 <Route path="settings" element={<SettingsPage />} />
-
+<Route path="reports" element={<ReportsPage />} />
       </Route>
     </Routes>
   );
