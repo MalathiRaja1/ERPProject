@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import apiClient from '../../api/client';
+// If you already added AlertButtons from the email-alerts build, restore this import
+// and the <AlertButtons /> line right after <h1>Dashboard</h1> below.
+// import { AlertButtons } from './AlertButtons';
 
 function Card({ label, value, tone }) {
-  const colors = { good: '#1f9254', warn: '#d68910', bad: '#c0392b', neutral: '#1f2430' };
+  const colors = { good: '#1f9254', warn: '#d68910', bad: '#c0392b', neutral: 'var(--text)' };
   return (
-    <div style={{ background: '#fff', borderRadius: 10, padding: 20, minWidth: 200, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-      <div style={{ fontSize: 13, color: '#666', marginBottom: 6 }}>{label}</div>
+    <div style={{ background: 'var(--card-bg)', borderRadius: 10, padding: 20, minWidth: 200, boxShadow: 'var(--shadow)' }}>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 700, color: colors[tone] || colors.neutral }}>{value}</div>
     </div>
   );
@@ -14,7 +17,7 @@ function Card({ label, value, tone }) {
 
 function ChartCard({ title, children }) {
   return (
-    <div style={{ background: '#fff', borderRadius: 10, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+    <div style={{ background: 'var(--card-bg)', borderRadius: 10, padding: 20, boxShadow: 'var(--shadow)', marginBottom: 20 }}>
       <h3 style={{ marginTop: 0 }}>{title}</h3>
       <div style={{ width: '100%', height: 260 }}>{children}</div>
     </div>
@@ -37,6 +40,7 @@ export default function DashboardPage() {
   return (
     <div>
       <h1>Dashboard</h1>
+      {/* <AlertButtons /> — restore this line if you added the email-alerts feature */}
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '20px 0' }}>
         <Card label="Low Stock Products" value={data.lowStockProductCount} tone={data.lowStockProductCount > 0 ? 'warn' : 'good'} />
@@ -48,23 +52,23 @@ export default function DashboardPage() {
         <Card label="Cash + Bank Balance" value={`₹${data.cashAndBankBalance.toFixed(2)}`} tone={data.cashAndBankBalance >= 0 ? 'good' : 'bad'} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="dashboard-charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <ChartCard title="Sales Trend (last 6 months)">
-          {salesTrend.length === 0 ? <p style={{ color: '#666' }}>No invoiced sales yet.</p> : (
+          {salesTrend.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No invoiced sales yet.</p> : (
             <ResponsiveContainer>
               <LineChart data={salesTrend}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="period" />
                 <YAxis />
                 <Tooltip formatter={(v) => `₹${v.toFixed(2)}`} />
-                <Line type="monotone" dataKey="total" stroke="#33415c" strokeWidth={2} />
+                <Line type="monotone" dataKey="total" stroke="var(--accent)" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
 
         <ChartCard title="Top Inventory Value by Product">
-          {inventoryValuation.length === 0 ? <p style={{ color: '#666' }}>No products yet.</p> : (
+          {inventoryValuation.length === 0 ? <p style={{ color: 'var(--text-muted)' }}>No products yet.</p> : (
             <ResponsiveContainer>
               <BarChart data={inventoryValuation}>
                 <CartesianGrid strokeDasharray="3 3" />

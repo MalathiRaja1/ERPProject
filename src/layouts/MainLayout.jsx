@@ -1,17 +1,23 @@
+import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import GlobalSearch from '../components/GlobalSearch';
+import { useTheme } from '../components/ThemeProvider';
 
 export default function MainLayout() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { theme, toggleTheme } = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <h2>ERP</h2>
-        <nav>
+        <nav onClick={closeSidebar}>
           <NavLink to="/" end className="nav-link">Dashboard</NavLink>
           <NavLink to="/inventory" className="nav-link">Inventory</NavLink>
           <NavLink to="/sales" className="nav-link">Sales — Quotations</NavLink>
@@ -32,9 +38,18 @@ export default function MainLayout() {
           <button onClick={() => dispatch(logout())}>Log out</button>
         </div>
       </aside>
+
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={closeSidebar} />
+
       <main className="content">
         <div className="top-header">
+          <button className="hamburger-btn" onClick={() => setSidebarOpen((o) => !o)} aria-label="Toggle menu">
+            ☰
+          </button>
           <GlobalSearch />
+          <button className="theme-toggle" onClick={toggleTheme} title="Toggle dark mode">
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
         </div>
         <Outlet />
       </main>
