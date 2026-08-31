@@ -67,3 +67,46 @@ button { cursor: pointer; }
 .pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; justify-content: flex-end; }
 .pagination button:disabled { opacity: 0.4; cursor: default; }
 
+/* Global search — append to src/index.css */
+.global-search { position: relative; margin: 0 24px; flex: 1; max-width: 420px; }
+.global-search input { width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+.global-search-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  max-height: 360px;
+  overflow-y: auto;
+  z-index: 100;
+}
+.global-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: #1f2430;
+}
+.global-search-item:hover { background: #f4f5f7; }
+.global-search-type {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #fff;
+  background: #33415c;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.global-search-label { font-weight: 600; font-size: 14px; }
+.global-search-subtitle { font-size: 12px; color: #888; }
+
+/* PDF download buttons */
+.pdf-btn { background: #c0392b; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; }
+
+.top-header { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+
+
+

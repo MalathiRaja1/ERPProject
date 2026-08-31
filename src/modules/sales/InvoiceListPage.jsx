@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import apiClient from '../../api/client';
 import { fetchInvoices, createInvoice, recordPayment } from './invoicesSlice';
+import { useToast, extractErrorMessage } from '../../components/ToastProvider';
+import { downloadPdf } from '../../utils/downloadPdf';
 
 const STATUS_COLORS = { Unpaid: '#c0392b', PartiallyPaid: '#d68910', Paid: '#1f9254', Overdue: '#8e1b1b' };
 
 export default function InvoiceListPage() {
   const dispatch = useDispatch();
+  const toast = useToast();
   const { items, status } = useSelector((state) => state.invoices);
   const [fulfilledOrders, setFulfilledOrders] = useState([]);
   const [showGenerate, setShowGenerate] = useState(false);
@@ -15,7 +18,6 @@ export default function InvoiceListPage() {
   const [payInvoice, setPayInvoice] = useState(null);
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState('BankTransfer');
-  const [error, setError] = useState(null);
 
   const load = () => {
     dispatch(fetchInvoices({}));
@@ -28,11 +30,11 @@ export default function InvoiceListPage() {
 
   const handleGenerate = async (e) => {
     e.preventDefault();
-    setError(null);
     const res = await dispatch(createInvoice({ salesOrderId: Number(orderId), dueDate }));
     if (createInvoice.rejected.match(res)) {
-      setError(res.payload || 'Failed to generate invoice');
+      toast.error(extractErrorMessage({ response: { data: res.payload } }, 'Failed to generate invoice'));
     } else {
+      toast.success('Invoice generated.');
       setShowGenerate(false);
       load();
     }
@@ -40,16 +42,24 @@ export default function InvoiceListPage() {
 
   const handlePay = async (e) => {
     e.preventDefault();
-    setError(null);
     const res = await dispatch(recordPayment({
       invoiceId: payInvoice.id, amount: Number(payAmount), method: payMethod, reference: null
     }));
     if (recordPayment.rejected.match(res)) {
-      setError(res.payload || 'Payment failed');
+      toast.error(extractErrorMessage({ response: { data: res.payload } }, 'Payment failed'));
     } else {
+      toast.success('Payment recorded.');
       setPayInvoice(null);
       setPayAmount('');
       load();
+    }
+  };
+
+  const handleDownload = async (inv) => {
+    try {
+      await downloadPdf(`/invoices/${inv.id}/pdf`, `${inv.invoiceNumber}.pdf`);
+    } catch {
+      toast.error('Failed to download PDF.');
     }
   };
 
@@ -81,8 +91,9 @@ export default function InvoiceListPage() {
               <td>₹{inv.amountDue.toFixed(2)}</td>
               <td><span style={{ color: STATUS_COLORS[inv.status] }}>{inv.status}</span></td>
               <td>
+                <button className="pdf-btn" onClick={() => handleDownload(inv)}>PDF</button>{' '}
                 {inv.status !== 'Paid' && (
-                  <button onClick={() => { setPayInvoice(inv); setPayAmount(inv.amountDue); setError(null); }}>
+                  <button onClick={() => { setPayInvoice(inv); setPayAmount(inv.amountDue); }}>
                     Record Payment
                   </button>
                 )}
@@ -108,7 +119,6 @@ export default function InvoiceListPage() {
             </select>
             <label>Due Date</label>
             <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required />
-            {error && <p className="error-text">{error}</p>}
             <div className="modal-actions">
               <button type="button" onClick={() => setShowGenerate(false)}>Cancel</button>
               <button type="submit">Generate</button>
@@ -128,7 +138,6 @@ export default function InvoiceListPage() {
             <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)}>
               <option>Cash</option><option>BankTransfer</option><option>Card</option><option>Cheque</option><option>Other</option>
             </select>
-            {error && <p className="error-text">{error}</p>}
             <div className="modal-actions">
               <button type="button" onClick={() => setPayInvoice(null)}>Cancel</button>
               <button type="submit">Record Payment</button>

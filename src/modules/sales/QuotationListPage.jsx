@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchQuotations, updateQuotationStatus, convertToOrder } from './quotationsSlice';
 import QuotationForm from './components/QuotationForm';
 import { useToast } from '../../components/ToastProvider';
+import { downloadPdf } from '../../utils/downloadPdf';
 
 const STATUS_COLORS = {
   Draft: '#8a8f98', Sent: '#2d6cdf', Accepted: '#1f9254', Rejected: '#c0392b', Expired: '#a5a9b0'
@@ -31,6 +32,14 @@ export default function QuotationListPage() {
     });
   };
 
+  const handleDownload = async (q) => {
+    try {
+      await downloadPdf(`/quotations/${q.id}/pdf`, `${q.quotationNumber}.pdf`);
+    } catch {
+      toast.error('Failed to download PDF.');
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -57,6 +66,7 @@ export default function QuotationListPage() {
               <td>₹{q.totalAmount.toFixed(2)}</td>
               <td><span style={{ color: STATUS_COLORS[q.status] }}>{q.status}</span></td>
               <td>
+                <button className="pdf-btn" onClick={() => handleDownload(q)}>PDF</button>{' '}
                 {q.status === 'Draft' && (
                   <button onClick={() => handleStatusChange(q.id, 'Sent')}>Mark Sent</button>
                 )}
