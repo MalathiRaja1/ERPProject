@@ -15,6 +15,7 @@ import PayrollPage from './modules/hr/PayrollPage';
 import SettingsPage from './modules/settings/SettingsPage';
 import DashboardPage from './modules/dashboard/DashboardPage';
 import ReportsPage from './modules/reports/ReportsPage';
+import AuditLogPage from './modules/audit/AuditLogPage';
 
 // Placeholder for modules not yet built out — replace as each module ships
 function ComingSoon({ title }) {
@@ -46,6 +47,7 @@ export default function App() {
 <Route path="hr/payroll" element={<PayrollPage />} />
 <Route path="settings" element={<SettingsPage />} />
 <Route path="reports" element={<ReportsPage />} />
+<Route path="audit" element={<AuditLogPage />} />
       </Route>
     </Routes>
   );
