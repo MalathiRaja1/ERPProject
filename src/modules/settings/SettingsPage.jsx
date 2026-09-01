@@ -1,19 +1,24 @@
 import { useEffect, useState } from 'react';
 import apiClient from '../../api/client';
+import { useToast, extractErrorMessage } from '../../components/ToastProvider';
 
 const TABS = {
   categories: { endpoint: '/categories', fields: ['name', 'description'], labels: ['Name', 'Description'] },
   suppliers: { endpoint: '/suppliers', fields: ['name', 'contactEmail', 'phone', 'address'], labels: ['Name', 'Email', 'Phone', 'Address'] },
   warehouses: { endpoint: '/warehouses', fields: ['name', 'location'], labels: ['Name', 'Location'] },
-  departments: { endpoint: '/departments', fields: ['name', 'managerUserId'], labels: ['Name', 'Manager User ID (optional)'] }
+  departments: { endpoint: '/departments', fields: ['name', 'managerUserId'], labels: ['Name', 'Manager User ID (optional)'] },
+  customers: {
+    endpoint: '/customers',
+    fields: ['name', 'email', 'phone', 'address', 'gstin', 'state', 'creditLimit'],
+    labels: ['Name', 'Email', 'Phone', 'Address', 'GSTIN', 'State', 'Credit Limit']
+  }
 };
 
-export default function SettingsPage() {
-  const [tab, setTab] = useState('categories');
+function ReferenceDataTab({ tab }) {
+  const toast = useToast();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({});
   const [editingId, setEditingId] = useState(null);
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const config = TABS[tab];
@@ -28,24 +33,24 @@ export default function SettingsPage() {
   useEffect(() => {
     setForm({});
     setEditingId(null);
-    setError(null);
     load();
   }, [tab]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
     try {
-      if (editingId) {
-        await apiClient.put(`${config.endpoint}/${editingId}`, form);
-      } else {
-        await apiClient.post(config.endpoint, form);
-      }
+      const payload = { ...form };
+      if ('creditLimit' in payload) payload.creditLimit = Number(payload.creditLimit || 0);
+
+      if (editingId) await apiClient.put(`${config.endpoint}/${editingId}`, payload);
+      else await apiClient.post(config.endpoint, payload);
+
+      toast.success(editingId ? 'Updated.' : 'Added.');
       setForm({});
       setEditingId(null);
       load();
     } catch (err) {
-      setError(err.response?.data || 'Save failed');
+      toast.error(extractErrorMessage(err, 'Save failed'));
     }
   };
 
@@ -56,29 +61,17 @@ export default function SettingsPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this item?')) return;
-    setError(null);
     try {
       await apiClient.delete(`${config.endpoint}/${id}`);
+      toast.success('Deleted.');
       load();
     } catch (err) {
-      setError(err.response?.data || 'Delete failed — it may still be in use elsewhere.');
+      toast.error(extractErrorMessage(err, 'Delete failed — it may still be in use elsewhere.'));
     }
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <h1>Settings — Reference Data</h1>
-      </div>
-
-      <div className="toolbar">
-        {Object.keys(TABS).map((t) => (
-          <button key={t} onClick={() => setTab(t)} disabled={tab === t} style={{ textTransform: 'capitalize' }}>
-            {t}
-          </button>
-        ))}
-      </div>
-
+    <>
       <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8, alignItems: 'flex-end', margin: '16px 0', flexWrap: 'wrap' }}>
         {config.fields.map((field, i) => (
           <div key={field}>
@@ -93,7 +86,6 @@ export default function SettingsPage() {
         <button type="submit">{editingId ? 'Update' : '+ Add'}</button>
         {editingId && <button type="button" onClick={() => { setEditingId(null); setForm({}); }}>Cancel Edit</button>}
       </form>
-      {error && <p className="error-text">{typeof error === 'string' ? error : JSON.stringify(error)}</p>}
 
       {loading && <p>Loading...</p>}
 
@@ -107,7 +99,7 @@ export default function SettingsPage() {
         <tbody>
           {items.map((item) => (
             <tr key={item.id}>
-              {config.fields.map((f) => <td key={f}>{item[f]}</td>)}
+              {config.fields.map((f) => <td key={f}>{f === 'creditLimit' ? `₹${(item[f] ?? 0).toFixed(2)}` : item[f]}</td>)}
               <td>
                 <button onClick={() => handleEdit(item)}>Edit</button>{' '}
                 <button onClick={() => handleDelete(item.id)}>Delete</button>
@@ -119,6 +111,74 @@ export default function SettingsPage() {
           )}
         </tbody>
       </table>
+    </>
+  );
+}
+
+function CompanyTab() {
+  const toast = useToast();
+  const [form, setForm] = useState({ companyName: '', gstin: '', address: '', state: '', defaultTermsAndConditions: '' });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiClient.get('/companysettings').then((res) => {
+      setForm(res.data);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await apiClient.put('/companysettings', form);
+      toast.success('Company settings saved.');
+    } catch (err) {
+      toast.error(extractErrorMessage(err, 'Failed to save'));
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <form onSubmit={handleSubmit} style={{ maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+      <p style={{ color: 'var(--text-muted)' }}>
+        Your business's own GST details. The State here determines whether invoices to a customer
+        get CGST+SGST (same state) or IGST (different state).
+      </p>
+      <label>Company Name</label>
+      <input value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} required />
+      <label>GSTIN</label>
+      <input value={form.gstin} onChange={(e) => setForm({ ...form, gstin: e.target.value })} placeholder="e.g. 27ABCDE1234F1Z5" required />
+      <label>Address</label>
+      <textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} required />
+      <label>State</label>
+      <input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} placeholder="e.g. Tamil Nadu" required />
+      <label>Default Terms &amp; Conditions (applied to new invoices/quotations unless overridden)</label>
+      <textarea value={form.defaultTermsAndConditions || ''} onChange={(e) => setForm({ ...form, defaultTermsAndConditions: e.target.value })} rows={4} />
+      <button type="submit" style={{ alignSelf: 'flex-start' }}>Save Company Settings</button>
+    </form>
+  );
+}
+
+export default function SettingsPage() {
+  const [tab, setTab] = useState('company');
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1>Settings</h1>
+      </div>
+
+      <div className="toolbar">
+        <button onClick={() => setTab('company')} disabled={tab === 'company'}>Company (GST)</button>
+        {Object.keys(TABS).map((t) => (
+          <button key={t} onClick={() => setTab(t)} disabled={tab === t} style={{ textTransform: 'capitalize' }}>
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'company' ? <CompanyTab /> : <ReferenceDataTab tab={tab} />}
     </div>
   );
 }

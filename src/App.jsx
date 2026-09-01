@@ -16,6 +16,8 @@ import SettingsPage from './modules/settings/SettingsPage';
 import DashboardPage from './modules/dashboard/DashboardPage';
 import ReportsPage from './modules/reports/ReportsPage';
 import AuditLogPage from './modules/audit/AuditLogPage';
+import ProjectListPage from './modules/projects/ProjectListPage';
+import ProjectDetailPage from './modules/projects/ProjectDetailPage';
 
 // Placeholder for modules not yet built out — replace as each module ships
 function ComingSoon({ title }) {
@@ -48,6 +50,8 @@ export default function App() {
 <Route path="settings" element={<SettingsPage />} />
 <Route path="reports" element={<ReportsPage />} />
 <Route path="audit" element={<AuditLogPage />} />
+<Route path="projects" element={<ProjectListPage />} />
+<Route path="projects/:id" element={<ProjectDetailPage />} />
       </Route>
     </Routes>
   );
