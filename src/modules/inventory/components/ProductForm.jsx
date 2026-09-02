@@ -10,7 +10,7 @@ export default function ProductForm({ onClose }) {
   const [categories, setCategories] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [form, setForm] = useState({
-    sku: '', name: '', description: '', categoryId: '', supplierId: '', unitPrice: '', reorderLevel: 0
+    sku: '', name: '', description: '', categoryId: '', supplierId: '', unitPrice: '', reorderLevel: 0, hsnCode: '', taxRatePercent: 18
   });
 
   useEffect(() => {
@@ -62,6 +62,17 @@ export default function ProductForm({ onClose }) {
         <input name="unitPrice" type="number" step="0.01" value={form.unitPrice} onChange={handleChange} required />
         <label>Reorder Level</label>
         <input name="reorderLevel" type="number" value={form.reorderLevel} onChange={handleChange} required />
+        <label>HSN/SAC Code</label>
+<input name="hsnCode" value={form.hsnCode} onChange={handleChange} placeholder="e.g. 8471" />
+<label>GST Rate</label>
+<select name="taxRatePercent" value={form.taxRatePercent} onChange={handleChange}>
+  <option value={0}>0%</option>
+  <option value={5}>5%</option>
+  <option value={12}>12%</option>
+  <option value={18}>18%</option>
+  <option value={28}>28%</option>
+</select>
+
 
         <div className="modal-actions">
           <button type="button" onClick={onClose}>Cancel</button>
