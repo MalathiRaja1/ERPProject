@@ -4,6 +4,7 @@ import apiClient from '../../api/client';
 import { fetchInvoices, createInvoice, recordPayment } from './invoicesSlice';
 import { useToast, extractErrorMessage } from '../../components/ToastProvider';
 import { downloadPdf } from '../../utils/downloadPdf';
+import ComplianceModal from './components/ComplianceModal';
 
 const STATUS_COLORS = { Unpaid: '#c0392b', PartiallyPaid: '#d68910', Paid: '#1f9254', Overdue: '#8e1b1b' };
 
@@ -18,6 +19,7 @@ export default function InvoiceListPage() {
   const [payInvoice, setPayInvoice] = useState(null);
   const [payAmount, setPayAmount] = useState('');
   const [payMethod, setPayMethod] = useState('BankTransfer');
+  const [complianceInvoice, setComplianceInvoice] = useState(null);
 
   const load = () => {
     dispatch(fetchInvoices({}));
@@ -90,14 +92,15 @@ export default function InvoiceListPage() {
               <td>₹{inv.amountPaid.toFixed(2)}</td>
               <td>₹{inv.amountDue.toFixed(2)}</td>
               <td><span style={{ color: STATUS_COLORS[inv.status] }}>{inv.status}</span></td>
-              <td>
-                <button className="pdf-btn" onClick={() => handleDownload(inv)}>PDF</button>{' '}
-                {inv.status !== 'Paid' && (
-                  <button onClick={() => { setPayInvoice(inv); setPayAmount(inv.amountDue); }}>
-                    Record Payment
-                  </button>
-                )}
-              </td>
+         <td>
+  <button className="pdf-btn" onClick={() => handleDownload(inv)}>PDF</button>{' '}
+  <button onClick={() => setComplianceInvoice(inv)}>GST Compliance</button>{' '}
+  {inv.status !== 'Paid' && (
+    <button onClick={() => { setPayInvoice(inv); setPayAmount(inv.amountDue); }}>
+      Record Payment
+    </button>
+  )}
+</td>
             </tr>
           ))}
           {items.length === 0 && status !== 'loading' && (
@@ -145,6 +148,9 @@ export default function InvoiceListPage() {
           </form>
         </div>
       )}
+      {complianceInvoice && (
+  <ComplianceModal invoice={complianceInvoice} onClose={() => setComplianceInvoice(null)} />
+)}
     </div>
   );
 }
