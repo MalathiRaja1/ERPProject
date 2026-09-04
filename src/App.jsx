@@ -18,6 +18,8 @@ import ReportsPage from './modules/reports/ReportsPage';
 import AuditLogPage from './modules/audit/AuditLogPage';
 import ProjectListPage from './modules/projects/ProjectListPage';
 import ProjectDetailPage from './modules/projects/ProjectDetailPage';
+import LeadListPage from './modules/marketing/LeadListPage';
+import CampaignListPage from './modules/marketing/CampaignListPage';
 
 // Placeholder for modules not yet built out — replace as each module ships
 function ComingSoon({ title }) {
@@ -52,6 +54,8 @@ export default function App() {
 <Route path="audit" element={<AuditLogPage />} />
 <Route path="projects" element={<ProjectListPage />} />
 <Route path="projects/:id" element={<ProjectDetailPage />} />
+<Route path="leads" element={<LeadListPage />} />
+<Route path="campaigns" element={<CampaignListPage />} />
       </Route>
     </Routes>
   );
