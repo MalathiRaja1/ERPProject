@@ -35,6 +35,8 @@ export default function MainLayout() {
           <NavLink to="/projects" className="nav-link">Projects</NavLink>
           <NavLink to="/leads" className="nav-link">Marketing — Leads</NavLink>
 <NavLink to="/campaigns" className="nav-link">Marketing — Campaigns</NavLink>
+<NavLink to="/purchase-orders" className="nav-link">Purchase Orders</NavLink>
+<NavLink to="/supplier-bills" className="nav-link">Supplier Bills</NavLink>
         </nav>
         <div className="sidebar-footer">
           <p>{user?.fullName}</p>

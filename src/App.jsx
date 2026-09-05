@@ -20,6 +20,8 @@ import ProjectListPage from './modules/projects/ProjectListPage';
 import ProjectDetailPage from './modules/projects/ProjectDetailPage';
 import LeadListPage from './modules/marketing/LeadListPage';
 import CampaignListPage from './modules/marketing/CampaignListPage';
+import PurchaseOrderListPage from './modules/purchasing/PurchaseOrderListPage';
+import SupplierBillListPage from './modules/purchasing/SupplierBillListPage';
 
 // Placeholder for modules not yet built out — replace as each module ships
 function ComingSoon({ title }) {
@@ -56,6 +58,8 @@ export default function App() {
 <Route path="projects/:id" element={<ProjectDetailPage />} />
 <Route path="leads" element={<LeadListPage />} />
 <Route path="campaigns" element={<CampaignListPage />} />
+<Route path="purchase-orders" element={<PurchaseOrderListPage />} />
+<Route path="supplier-bills" element={<SupplierBillListPage />} />
       </Route>
     </Routes>
   );
